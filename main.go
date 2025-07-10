@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fancykaraoke/db"
 	"fancykaraoke/handlers"
 	"log"
@@ -8,23 +9,23 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 )
 
+var server *http.Server
+
 func main() {
-	dbase, err := db.InitDb()
-	if err != nil {
-		log.Fatal(err)
-	}
+	dbase := db.GetConnection()
 
 	channel := make(chan os.Signal, 1)
 	signal.Notify(channel, os.Interrupt)
 	go func() {
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
 		for sig := range channel {
-			// sig is a ^C, handle it
 			if sig == syscall.SIGINT {
+				server.Shutdown(ctx)
 				dbase.Close()
-				log.Fatal("Shutting down")
-				// @TODO gracefully shut down http server here
 			}
 		}
 	}()
@@ -33,13 +34,15 @@ func main() {
 
 	router.HandleFunc("GET /{$}", handlers.GetIndex)
 	router.Handle("GET /static/", http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
-
 	// @TODO 404 handler
 	// router.HandleFunc("/", handlers.Get404)
 
 	log.Println("Starting server on port 8080")
-	err = http.ListenAndServe(":8080", router)
-	if err != nil {
+	server = &http.Server{
+		Addr:    ":8080",
+		Handler: router,
+	}
+	if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 		log.Fatal(err)
 	}
 }

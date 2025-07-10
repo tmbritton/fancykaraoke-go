@@ -3,6 +3,8 @@ package db
 import (
 	"database/sql"
 	"fmt"
+	"log"
+	"sync"
 
 	_ "github.com/mattn/go-sqlite3" // SQLite driver
 )
@@ -12,7 +14,23 @@ type SQLiteStore struct {
 	db *sql.DB
 }
 
-func InitDb() (*SQLiteStore, error) {
+var (
+	conn *SQLiteStore
+	once sync.Once
+)
+
+func GetConnection() *SQLiteStore {
+	once.Do(func() {
+		db, err := initDb()
+		if err != nil {
+			log.Fatal(err)
+		}
+		conn = db
+	})
+	return conn
+}
+
+func initDb() (*SQLiteStore, error) {
 	dbLocation := "./fancykaraoke.db"
 
 	// Open database connection
