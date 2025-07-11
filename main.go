@@ -30,6 +30,10 @@ func main() {
 		}
 	}()
 
+	if err := db.DoMigrations(dbase); err != nil {
+		log.Fatal(err)
+	}
+
 	router := http.NewServeMux()
 
 	router.HandleFunc("GET /{$}", handlers.GetIndex)

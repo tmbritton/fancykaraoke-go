@@ -6,7 +6,8 @@ import (
 	"log"
 	"sync"
 
-	_ "github.com/mattn/go-sqlite3" // SQLite driver
+	_ "github.com/knaka/go-sqlite3-fts5" // Full-text search SQLite extension
+	_ "github.com/mattn/go-sqlite3"      // SQLite driver
 )
 
 // SQLiteStore handles database connections and operations
@@ -31,7 +32,7 @@ func GetConnection() *SQLiteStore {
 }
 
 func initDb() (*SQLiteStore, error) {
-	dbLocation := "./fancykaraoke.db"
+	dbLocation := "./fancykaraoke.db?fts5=true&foreign_keys=true"
 
 	// Open database connection
 	db, err := sql.Open("sqlite3", dbLocation)
