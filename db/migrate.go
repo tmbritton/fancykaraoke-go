@@ -24,7 +24,7 @@ func setupDb(conn *SQLiteStore) error {
       applied_at DATETIME DEFAULT CURRENT_TIMESTAMP
     );
 	`
-	_, err := conn.db.Exec(sql)
+	_, err := conn.DB.Exec(sql)
 	return err
 }
 
@@ -35,7 +35,7 @@ func getCurrentVersion(conn *SQLiteStore) (int, error) {
 		ORDER BY applied_at DESC
 		LIMIT 1
 	`
-	if err := conn.db.QueryRow(sqlStr).Scan(&version); err != nil {
+	if err := conn.DB.QueryRow(sqlStr).Scan(&version); err != nil {
 		// return 0, err
 		if err == sql.ErrNoRows {
 			return 0, nil
@@ -102,7 +102,7 @@ func getFileContents(fileNames []string) ([]Migration, error) {
 
 func performQueries(conn *SQLiteStore, migrations []Migration) error {
 	for _, m := range migrations {
-		_, err := conn.db.Exec(m.SQL)
+		_, err := conn.DB.Exec(m.SQL)
 		if err != nil {
 			return err
 		}
@@ -114,7 +114,7 @@ func performQueries(conn *SQLiteStore, migrations []Migration) error {
 }
 
 func updateVersion(conn *SQLiteStore, version int) error {
-	_, err := conn.db.Exec(`
+	_, err := conn.DB.Exec(`
 		INSERT INTO schema_version(version)
 		VALUES(?)
 	`, version)

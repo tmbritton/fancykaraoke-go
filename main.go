@@ -4,6 +4,7 @@ import (
 	"context"
 	"fancykaraoke/db"
 	"fancykaraoke/handlers"
+	"fancykaraoke/utils"
 	"log"
 	"net/http"
 	"os"
@@ -12,11 +13,40 @@ import (
 	"time"
 )
 
-var server *http.Server
+var (
+	server *http.Server
+	dbase  *db.SQLiteStore
+)
 
 func main() {
-	dbase := db.GetConnection()
+	dbase = db.GetConnection()
 
+	if err := db.DoMigrations(dbase); err != nil {
+		log.Fatal(err)
+	}
+
+	if len(os.Args) < 2 {
+		log.Fatal("No command specified, please pass import or serve as command line argument")
+	}
+
+	command := os.Args[1]
+
+	listenForShutdown()
+
+	if command == "import" {
+		doSongImport()
+	}
+
+	if command == "serve" {
+		startServer()
+	}
+}
+
+func doSongImport() {
+	utils.ImportSongs()
+}
+
+func listenForShutdown() {
 	channel := make(chan os.Signal, 1)
 	signal.Notify(channel, os.Interrupt)
 	go func() {
@@ -24,16 +54,16 @@ func main() {
 		defer cancel()
 		for sig := range channel {
 			if sig == syscall.SIGINT {
-				server.Shutdown(ctx)
+				if server != nil {
+					server.Shutdown(ctx)
+				}
 				dbase.Close()
 			}
 		}
 	}()
+}
 
-	if err := db.DoMigrations(dbase); err != nil {
-		log.Fatal(err)
-	}
-
+func startServer() {
 	router := http.NewServeMux()
 
 	router.HandleFunc("GET /{$}", handlers.GetIndex)

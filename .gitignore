@@ -8,6 +8,9 @@
 # Test binary, built with `go test -c`
 *.test
 
+# Output of go build
+fancykaraoke
+
 # Output of the go coverage tool
 *.out
 

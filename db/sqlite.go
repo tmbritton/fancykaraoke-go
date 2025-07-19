@@ -12,7 +12,7 @@ import (
 
 // SQLiteStore handles database connections and operations
 type SQLiteStore struct {
-	db *sql.DB
+	DB *sql.DB
 }
 
 var (
@@ -45,10 +45,10 @@ func initDb() (*SQLiteStore, error) {
 		db.Close()
 		return nil, fmt.Errorf("failed to connect to database: %w", err)
 	}
-	return &SQLiteStore{db: db}, nil
+	return &SQLiteStore{DB: db}, nil
 }
 
 // Close closes the database connection
 func (s *SQLiteStore) Close() error {
-	return s.db.Close()
+	return s.DB.Close()
 }
