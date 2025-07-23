@@ -32,7 +32,7 @@ func getCurrentVersion(conn *SQLiteStore) (int, error) {
 	var version int
 	sqlStr := `
 		SELECT version FROM schema_version
-		ORDER BY applied_at DESC
+		ORDER BY version DESC
 		LIMIT 1
 	`
 	if err := conn.DB.QueryRow(sqlStr).Scan(&version); err != nil {
