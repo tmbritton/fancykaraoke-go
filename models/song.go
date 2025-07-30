@@ -1,17 +1,15 @@
 package models
 
 import (
-	"fancykaraoke/db"
+	"time"
 )
 
-var conn = db.GetConnection()
-
 type Song struct {
-	Id        int    `json:"id"`
-	Artist    string `json:"artist"`
-	Title     string `json:"title"`
-	YoutubeId string `json:"youtube_id"`
-	CreatedAt string `json:"created_at"`
+	Id        int       `json:"id"`
+	Artist    string    `json:"artist"`
+	Title     string    `json:"title"`
+	YoutubeId string    `json:"youtube_id"`
+	CreatedAt time.Time `json:"created_at"`
 }
 
 func GetSongById(id int) (Song, error) {
@@ -43,7 +41,6 @@ func SearchSongs(searchTerm string, limit int) ([]Song, error) {
 			return songs, err
 		}
 		songs = append(songs, song)
-
 	}
 	return songs, nil
 }

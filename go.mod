@@ -10,6 +10,7 @@ require (
 	github.com/cli/browser v1.3.0 // indirect
 	github.com/fatih/color v1.16.0 // indirect
 	github.com/fsnotify/fsnotify v1.7.0 // indirect
+	github.com/google/uuid v1.6.0 // indirect
 	github.com/joho/godotenv v1.5.1 // indirect
 	github.com/knaka/go-sqlite3-fts5 v0.0.0-20240729040425-e53b86878d0d // indirect
 	github.com/lib/pq v1.10.9 // indirect
