@@ -3,6 +3,7 @@ package models
 import (
 	"fancykaraoke/db"
 	"regexp"
+	"strconv"
 	"strings"
 	"time"
 
@@ -18,7 +19,7 @@ type Party struct {
 	CreatedAt time.Time `json:"created_at"`
 }
 
-func NewParty(name string) Party {
+func NewParty(name string) (Party, error) {
 	// Strip everything except letters, numbers, spaces, and hyphens
 	nameRe := regexp.MustCompile(`[^a-zA-Z 0-9-]+`)
 	safeName := nameRe.ReplaceAllString(name, "")
@@ -29,6 +30,15 @@ func NewParty(name string) Party {
 	slug = slugRe.ReplaceAllString(slug, "-")
 	// Trim hyphens from start/end
 	slug = strings.Trim(slug, "-")
+	// Add number to already used slug
+	slugCount, err := GetSlugCount(slug)
+	if err != nil {
+		return Party{}, err
+	}
+	if slugCount > 0 {
+		slug = slug + "-" + strconv.Itoa(slugCount)
+	}
+
 	return Party{
 		Id:        uuid.New().String(),
 		Name:      safeName,
@@ -38,7 +48,7 @@ func NewParty(name string) Party {
 }
 
 func GetPartyBySlug(slug string) (Party, error) {
-	q := `SELECT id, artist, name, slug, created_at FROM songs WHERE slug = ?`
+	q := `SELECT id, name, slug, created_at FROM parties WHERE slug = ?`
 	var party Party
 	if err := conn.DB.QueryRow(q, slug).Scan(&party.Id, &party.Name, &party.Slug, &party.CreatedAt); err != nil {
 		return party, err
@@ -47,7 +57,10 @@ func GetPartyBySlug(slug string) (Party, error) {
 }
 
 func CreateParty(name string) (Party, error) {
-	party := NewParty(name)
+	party, err := NewParty(name)
+	if err != nil {
+		return Party{}, err
+	}
 
 	sql := `INSERT INTO parties (id, name, slug) VALUES (?, ?, ?)`
 	result, err := conn.DB.Exec(sql, party.Id, party.Name, party.Slug)
@@ -55,4 +68,14 @@ func CreateParty(name string) (Party, error) {
 		return Party{}, err
 	}
 	return party, nil
+}
+
+func GetSlugCount(slug string) (int, error) {
+	param := slug + "%"
+	sql := `SELECT COUNT(*) FROM parties WHERE slug LIKE ?`
+	count := 0
+	err := conn.DB.QueryRow(sql, param).Scan(&count); err != nil {
+		return 0, err
+	}
+	return count, nil
 }
